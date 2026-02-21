@@ -222,8 +222,8 @@ void app_process_action(void) {
 }
 
 /**************************************************************************/ /**
-                                                                              * Bluetooth stack event handler
-                                                                              *****************************************************************************/
+* Bluetooth stack event handler
+*****************************************************************************/
 void sl_bt_on_event(sl_bt_msg_t *evt) {
   sl_status_t sc;
   bd_addr address;
@@ -317,8 +317,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt) {
 }
 
 /**************************************************************************/ /**
-                                                                              * Simple Button callback
-                                                                              *****************************************************************************/
+* Simple Button callback
+*****************************************************************************/
 void sl_button_on_change(const sl_button_t *handle) {
   // Button pressed - trigger immediate sensor update
   if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED) {
@@ -338,8 +338,8 @@ void sl_button_on_change(const sl_button_t *handle) {
 }
 
 /**************************************************************************/ /**
-                                                                              * Timer callback - periodic sensor updates
-                                                                              *****************************************************************************/
+* Timer callback - periodic sensor updates
+*****************************************************************************/
 static void app_periodic_timer_cb(app_timer_t *timer, void *data) {
   (void)data;
   (void)timer;
