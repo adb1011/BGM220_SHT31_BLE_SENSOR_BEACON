@@ -1,0 +1,52 @@
+# ── SiLabs / Simplicity Studio ──────────────────────────────
+# Build output
+GNU ARM v*/
+build/
+output/
+Release/
+Debug/
+
+# IDE & project metadata
+.metadata/
+.launches/
+*.launch
+*.depend
+*.layout
+.cproject.bak
+.project.bak
+
+# Simplicity Studio auto-generated
+autogen/
+artifact/
+
+# SDK links (these are local to each machine)
+*.slps
+*.pintool
+
+# ── Compiler artefacts ──────────────────────────────────────
+*.o
+*.a
+*.d
+*.axf
+*.elf
+*.bin
+*.hex
+*.map
+*.su
+*.lst
+
+# ── OS junk ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Editor configs (optional — remove lines you want to keep)
+.vscode/
+.idea/
+*.swp
+*~
+
+# ── Sensitive / local config ────────────────────────────────
+secrets.h
+credentials.h
+local_config.h
