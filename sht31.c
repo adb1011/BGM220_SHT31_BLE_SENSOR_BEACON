@@ -6,32 +6,35 @@
 #include <stddef.h>
 
 // SHT31 Commands (MSB, LSB)
-#define SHT31_CMD_MEASURE_HIGH_REP 0x2400 // High repeatability measurement
-#define SHT31_CMD_MEASURE_MED_REP 0x240B  // Medium repeatability measurement
-#define SHT31_CMD_MEASURE_LOW_REP 0x2416  // Low repeatability measurement
-#define SHT31_CMD_READ_STATUS 0xF32D      // Read status register
-#define SHT31_CMD_CLEAR_STATUS 0x3041     // Clear status register
-#define SHT31_CMD_SOFT_RESET 0x30A2       // Soft reset
-#define SHT31_CMD_HEATER_ENABLE 0x306D    // Enable heater
-#define SHT31_CMD_HEATER_DISABLE 0x3066   // Disable heater
+#define SHT31_CMD_MEASURE_HIGH_REP                                             \
+  0x2400        // High repeatability measurement
+#define SHT31_CMD_MEASURE_MED_REP                                              \
+  0x240B        // Medium repeatability measurement
+#define SHT31_CMD_MEASURE_LOW_REP 0x2416        // Low repeatability measurement
+#define SHT31_CMD_READ_STATUS 0xF32D            // Read status register
+#define SHT31_CMD_CLEAR_STATUS 0x3041           // Clear status register
+#define SHT31_CMD_SOFT_RESET 0x30A2             // Soft reset
+#define SHT31_CMD_HEATER_ENABLE 0x306D          // Enable heater
+#define SHT31_CMD_HEATER_DISABLE 0x3066         // Disable heater
 
 // Timing constants
 #define SHT31_MEASURE_DELAY_MS_HIGH                                            \
-  15 // Measurement time for high repeatability
+  15        // Measurement time for high repeatability
 #define SHT31_MEASURE_DELAY_MS_MED                                             \
-  6 // Measurement time for medium repeatability
-#define SHT31_MEASURE_DELAY_MS_LOW 4 // Measurement time for low repeatability
+  6        // Measurement time for medium repeatability
+#define SHT31_MEASURE_DELAY_MS_LOW                                             \
+  4        // Measurement time for low repeatability
 
 // Internal state
 static bool sht31_initialized = false;
 static uint8_t sht31_i2c_addr = SHT31_I2C_ADDR_DEFAULT;
 
 /***************************************************************************/ /**
-                                                                               * @brief Calculate CRC-8 checksum for SHT31 data validation
-                                                                               *
-                                                                               * Polynomial: 0x31 (x^8 + x^5 + x^4 + 1)
-                                                                               * Initialization: 0xFF
-                                                                               ******************************************************************************/
+* @brief Calculate CRC-8 checksum for SHT31 data validation
+*
+* Polynomial: 0x31 (x^8 + x^5 + x^4 + 1)
+* Initialization: 0xFF
+******************************************************************************/
 static uint8_t sht31_crc8(const uint8_t *data, uint8_t len) {
   uint8_t crc = 0xFF;
 
@@ -50,18 +53,19 @@ static uint8_t sht31_crc8(const uint8_t *data, uint8_t len) {
 }
 
 /***************************************************************************/ /**
-                                                                               * @brief Send command to SHT31
-                                                                               ******************************************************************************/
+* @brief Send command to SHT31
+******************************************************************************/
 static sl_status_t sht31_send_command(uint16_t command) {
   I2C_TransferSeq_TypeDef seq;
   uint8_t cmd_buf[2];
 
   // Split 16-bit command into MSB and LSB
-  cmd_buf[0] = (command >> 8) & 0xFF; // MSB
-  cmd_buf[1] = command & 0xFF;        // LSB
+  cmd_buf[0] = (command >> 8) & 0xFF;        // MSB
+  cmd_buf[1] = command & 0xFF;               // LSB
 
   // Setup I2C transfer
-  seq.addr = sht31_i2c_addr << 1; // 7-bit address, shift for read/write bit
+  seq.addr = sht31_i2c_addr
+             << 1;        // 7-bit address, shift for read/write bit
   seq.flags = I2C_FLAG_WRITE;
   seq.buf[0].data = cmd_buf;
   seq.buf[0].len = 2;
@@ -79,8 +83,8 @@ static sl_status_t sht31_send_command(uint16_t command) {
 }
 
 /***************************************************************************/ /**
-                                                                               * @brief Read data from SHT31
-                                                                               ******************************************************************************/
+* @brief Read data from SHT31
+******************************************************************************/
 static sl_status_t sht31_read_data(uint8_t *data, uint8_t len) {
   I2C_TransferSeq_TypeDef seq;
 
@@ -103,8 +107,8 @@ static sl_status_t sht31_read_data(uint8_t *data, uint8_t len) {
 }
 
 /***************************************************************************/ /**
-                                                                               * @brief Initialize SHT31 sensor
-                                                                               ******************************************************************************/
+* @brief Initialize SHT31 sensor
+******************************************************************************/
 sl_status_t sht31_init(uint8_t i2c_address) {
   sl_status_t sc;
 
@@ -145,11 +149,11 @@ sl_status_t sht31_init(uint8_t i2c_address) {
 }
 
 /***************************************************************************/ /**
-                                                                               * @brief Read temperature and humidity from SHT31
-                                                                               ******************************************************************************/
+* @brief Read temperature and humidity from SHT31
+******************************************************************************/
 sl_status_t sht31_read(sht31_reading_t *reading) {
   sl_status_t sc;
-  uint8_t data[6]; // 2 bytes temp + 1 CRC + 2 bytes humidity + 1 CRC
+  uint8_t data[6];        // 2 bytes temp + 1 CRC + 2 bytes humidity + 1 CRC
 
   if (!sht31_initialized) {
     app_log_warning("\rSHT31: Not initialized\r\n" APP_LOG_NL);
@@ -224,16 +228,16 @@ sl_status_t sht31_read(sht31_reading_t *reading) {
 }
 
 /***************************************************************************/ /**
-                                                                               * @brief Soft reset SHT31
-                                                                               ******************************************************************************/
+* @brief Soft reset SHT31
+******************************************************************************/
 sl_status_t sht31_soft_reset(void) {
   app_log_debug("\rSHT31: Performing soft reset\r\n" APP_LOG_NL);
   return sht31_send_command(SHT31_CMD_SOFT_RESET);
 }
 
 /***************************************************************************/ /**
-                                                                               * @brief Enable/disable SHT31 heater
-                                                                               ******************************************************************************/
+* @brief Enable/disable SHT31 heater
+******************************************************************************/
 sl_status_t sht31_set_heater(bool enable) {
   uint16_t cmd = enable ? SHT31_CMD_HEATER_ENABLE : SHT31_CMD_HEATER_DISABLE;
   app_log_info("\rSHT31: %s heater\r\n" APP_LOG_NL,
@@ -242,11 +246,11 @@ sl_status_t sht31_set_heater(bool enable) {
 }
 
 /***************************************************************************/ /**
-                                                                               * @brief Read SHT31 status register
-                                                                               ******************************************************************************/
+* @brief Read SHT31 status register
+******************************************************************************/
 sl_status_t sht31_read_status(uint16_t *status) {
   sl_status_t sc;
-  uint8_t data[3]; // 2 bytes status + 1 CRC
+  uint8_t data[3];        // 2 bytes status + 1 CRC
 
   if (status == NULL) {
     return SL_STATUS_NULL_POINTER;
@@ -280,8 +284,8 @@ sl_status_t sht31_read_status(uint16_t *status) {
 }
 
 /***************************************************************************/ /**
-                                                                               * @brief Hardware test for SHT31
-                                                                               ******************************************************************************/
+* @brief Hardware test for SHT31
+******************************************************************************/
 void sht31_hardware_test(void) {
   app_log_info("\r\n");
   app_log_info("\r========================================\r\n" APP_LOG_NL);
@@ -335,7 +339,7 @@ void sht31_hardware_test(void) {
       int32_t temp_whole = (int32_t)reading.temperature_c;
       int32_t temp_frac = (int32_t)((reading.temperature_c - temp_whole) * 100);
       if (temp_frac < 0)
-        temp_frac = -temp_frac; // Handle negative temps
+        temp_frac = -temp_frac;        // Handle negative temps
 
       int32_t hum_whole = (int32_t)reading.humidity;
       int32_t hum_frac = (int32_t)((reading.humidity - hum_whole) * 100);
@@ -351,7 +355,7 @@ void sht31_hardware_test(void) {
       app_log_info("\r  #%d: [FAILED - 0x%04lx]\r\n" APP_LOG_NL, i + 1, sc);
     }
 
-    sl_udelay_wait(100000); // 100ms between readings
+    sl_udelay_wait(100000);        // 100ms between readings
   }
 
   // Results

@@ -1,3 +1,33 @@
+/***************************************************************************/
+/**
+* @file
+* @brief Core application logic.
+*******************************************************************************
+* # License
+* <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+*******************************************************************************
+*
+* SPDX-License-Identifier: Zlib
+*
+* The licensor of this software is Silicon Laboratories Inc.
+*
+* This software is provided 'as-is', without any express or implied
+* warranty. In no event will the authors be held liable for any damages
+* arising from the use of this software.
+*
+* Permission is granted to anyone to use this software for any purpose,
+* including commercial applications, and to alter it and redistribute it
+* freely, subject to the following restrictions:
+*
+* 1. The origin of this software must not be misrepresented; you must not
+*    claim that you wrote the original software. If you use this software
+*    in a product, an acknowledgment in the product documentation would be
+*    appreciated but is not required.
+* 2. Altered source versions must be plainly marked as such, and must not be
+*    misrepresented as being the original software.
+* 3. This notice may not be removed or altered from any source distribution.
+*
+******************************************************************************/
 #include "sl_status.h"
 #include <stdbool.h>
 
@@ -28,25 +58,25 @@ static void app_periodic_timer_cb(app_timer_t *timer, void *data);
 // Custom beacon advertisement data structure
 typedef struct __attribute__((packed)) {
   // Flags (mandatory)
-  uint8_t flags_len;  // Length of flags field
-  uint8_t flags_type; // AD type: Flags
-  uint8_t flags_data; // Flags data
+  uint8_t flags_len;         // Length of flags field
+  uint8_t flags_type;        // AD type: Flags
+  uint8_t flags_data;        // Flags data
 
   // Manufacturer Specific Data
-  uint8_t mfg_len;     // Length of manufacturer data field
-  uint8_t mfg_type;    // AD Type: Manufacturer Specific Data
-  uint16_t company_id; // Company identifier (0xFFFF = test/development)
+  uint8_t mfg_len;            // Length of manufacturer data field
+  uint8_t mfg_type;           // AD Type: Manufacturer Specific Data
+  uint16_t company_id;        // Company identifier (0xFFFF = test/development)
 
   // Custom sensor data payload
-  int16_t temperature;   // Temperature in 0.01°C units
-  uint16_t humidity;     // Humidity in 0.01% units
-  uint8_t battery_level; // Battery level 0-100%
-  uint8_t sensor_status; // Status flags (bit 0: valid reading)
+  int16_t temperature;          // Temperature in 0.01°C units
+  uint16_t humidity;            // Humidity in 0.01% units
+  uint8_t battery_level;        // Battery level 0-100%
+  uint8_t sensor_status;        // Status flags (bit 0: valid reading)
 
   // Device name
-  uint8_t name_len;  // Length of name field
-  uint8_t name_type; // AD Type: Complete Local Name
-  uint8_t name[11];  // Device name (11 characters)
+  uint8_t name_len;         // Length of name field
+  uint8_t name_type;        // AD Type: Complete Local Name
+  uint8_t name[11];         // Device name (11 characters)
 } beacon_adv_data_t;
 
 // Global advertising data
@@ -59,24 +89,26 @@ static sht31_reading_t last_reading;
 static void init_beacon_adv_data(void) {
   // Flags
   beacon_adv_data.flags_len = 0x02;
-  beacon_adv_data.flags_type = 0x01; // Flags AD type
+  beacon_adv_data.flags_type = 0x01;        // Flags AD type
   beacon_adv_data.flags_data =
-      0x06; // LE General Discoverable Mode, BR/EDR Not Supported
+      0x06;        // LE General Discoverable Mode, BR/EDR Not Supported
 
   // Manufacturer specific data
-  beacon_adv_data.mfg_len = 0x09;  // 1 (type) + 2 (company) + 6 (sensor data)
-  beacon_adv_data.mfg_type = 0xFF; // Manufacturer Specific Data AD type
-  beacon_adv_data.company_id = 0xFFFF; // Test/development company ID
+  beacon_adv_data.mfg_len =
+      0x09;        // 1 (type) + 2 (company) + 6 (sensor data)
+  beacon_adv_data.mfg_type = 0xFF;        // Manufacturer Specific Data AD type
+  beacon_adv_data.company_id = 0xFFFF;        // Test/development company ID
 
   // Initialize sensor data to safe defaults
   beacon_adv_data.temperature = 0;
   beacon_adv_data.humidity = 0;
-  beacon_adv_data.battery_level = 100;  // Assume full battery
-  beacon_adv_data.sensor_status = 0x00; // 0x00 = invalid/no reading yet
+  beacon_adv_data.battery_level = 100;         // Assume full battery
+  beacon_adv_data.sensor_status = 0x00;        // 0x00 = invalid/no reading yet
 
   // Device name
-  beacon_adv_data.name_len = 0x0C;  // Length of name field (1 type + 11 chars)
-  beacon_adv_data.name_type = 0x09; // Complete Local Name AD type
+  beacon_adv_data.name_len =
+      0x0C;        // Length of name field (1 type + 11 chars)
+  beacon_adv_data.name_type = 0x09;        // Complete Local Name AD type
   const char device_name[] = "SHT31-ENVIR";
   for (int i = 0; i < 11 && i < (int)sizeof(device_name) - 1; i++) {
     beacon_adv_data.name[i] = device_name[i];
@@ -115,7 +147,7 @@ static void update_beacon_data(void) {
     int32_t temp_frac =
         (int32_t)((last_reading.temperature_c - temp_whole) * 100);
     if (temp_frac < 0)
-      temp_frac = -temp_frac; // Handle negative temps
+      temp_frac = -temp_frac;        // Handle negative temps
 
     int32_t hum_whole = (int32_t)last_reading.humidity;
     int32_t hum_frac = (int32_t)((last_reading.humidity - hum_whole) * 100);
@@ -129,7 +161,7 @@ static void update_beacon_data(void) {
   } else {
     app_log_warning("\rSensor read failed [0x%04lx] valid=%d\r\n" APP_LOG_NL,
                     sc, last_reading.valid);
-    beacon_adv_data.sensor_status = 0x00; // Set status to invalid
+    beacon_adv_data.sensor_status = 0x00;        // Set status to invalid
 
     // Set to obviously invalid values for debugging
     beacon_adv_data.temperature = -9999;
@@ -161,7 +193,7 @@ void app_init(void) {
 
   // Initialize SHT31 sensor
   app_log_info("\rInitializing SHT31 sensor...\r\n" APP_LOG_NL);
-  sc = sht31_init(SHT31_I2C_ADDR_DEFAULT); // Use 0x44 address
+  sc = sht31_init(SHT31_I2C_ADDR_DEFAULT);        // Use 0x44 address
 
   // Check Initialization status
   if (sc != SL_STATUS_OK) {
@@ -229,10 +261,10 @@ void sl_bt_on_event(sl_bt_msg_t *evt) {
     // Set advertising interval to 100ms (160 * 0.625ms = 100ms)
     sc = sl_bt_advertiser_set_timing(
         advertising_set_handle,
-        160, // min. adv. interval (milliseconds * 1.6)
-        160, // max. adv. interval (milliseconds * 1.6)
-        0,   // adv. duration (0 = no limit)
-        0);  // max. num. adv. events (0 = no limit)
+        160,        // min. adv. interval (milliseconds * 1.6)
+        160,        // max. adv. interval (milliseconds * 1.6)
+        0,          // adv. duration (0 = no limit)
+        0);         // max. num. adv. events (0 = no limit)
     app_assert_status(sc);
 
     // Start advertising in non-connectable mode (beacon mode)
@@ -249,9 +281,10 @@ void sl_bt_on_event(sl_bt_msg_t *evt) {
 
     // Start periodic timer for sensor updates
     sc = app_timer_start(&app_periodic_timer,
-                         SENSOR_UPDATE_INTERVAL_SEC * 1000, // Convert to ms
+                         SENSOR_UPDATE_INTERVAL_SEC *
+                             1000,        // Convert to ms
                          app_periodic_timer_cb, NULL,
-                         true); // Periodic timer
+                         true);        // Periodic timer
     app_assert_status(sc);
 
     break;
